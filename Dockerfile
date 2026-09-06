@@ -1,9 +1,19 @@
-FROM python:3.10-slim
-WORKDIR /app
-# install ffmpeg and build dependencies
-RUN apt-get update && apt-get install -y ffmpeg git build-essential && rm -rf /var/lib/apt/lists/*
-COPY . /app
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-# Expose nothing; this is a background worker
-CMD ["python3", "-m", "VISHALMUSIC"] 
+FROM nikolaik/python-nodejs:python3.10-nodejs20
+
+RUN apt-get update && \
+    apt-get install -y git curl xz-utils && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz \
+    -o /tmp/ffmpeg.tar.xz && \
+    tar -xJf /tmp/ffmpeg.tar.xz -C /tmp && \
+    mv /tmp/ffmpeg-*-static/ffmpeg /usr/local/bin/ffmpeg && \
+    mv /tmp/ffmpeg-*-static/ffprobe /usr/local/bin/ffprobe && \
+    rm -rf /tmp/ffmpeg*
+
+COPY . /app/
+WORKDIR /app/
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+CMD ["bash", "start"]
